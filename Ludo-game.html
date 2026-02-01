@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Guess the Word 3D</title>
+    <style>
+        /* --- CORE THEME & COLORS --- */
+        :root {
+            --bg-color: #eef2f5; 
+            --text-main: #333;
+            
+            /* 3D Button Colors */
+            --btn-blue-top: #4c6ef5;
+            --btn-blue-shadow: #364fc7;
+            --btn-purple-top: #748ffc;
+            --btn-purple-shadow: #5b76e6;
+            --btn-green-top: #6aaa64;
+            --btn-green-shadow: #467a42;
+            --btn-gray-top: #9ca3af;
+            --btn-gray-shadow: #6b7280;
+
+            /* Game Tile Colors */
+            --tile-empty-bg: #ffffff;
+            --tile-empty-border: #d1d5db;
+            --tile-empty-shadow: #e5e7eb;
+            
+            --correct-bg: #6aaa64; /* Green */
+            --correct-shadow: #467a42;
+            
+            --present-bg: #eab308; /* Yellow */
+            --present-shadow: #ca8a04;
+            
+            /* --- UPDATED: ABSENT COLOR IS RED --- */
+            --absent-bg: #dc2626; /* Red */
+            --absent-shadow: #991b1b; /* Dark Red Shadow */
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #47A9FF;
+            color: var(--text-main);
+            /* Ensure BG.jpg is in the folder */
+            background-image: url("BG.jpg"); 
+            background-size: cover;
+            background-position: center;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* --- HOME SCREEN LAYOUT --- */
+        #home-screen {
+            width: 100%;
+            max-width: 500px;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            padding-top: 50px;
+            box-sizing: border-box;
+            gap: 20px;
+        }
+
+        .home-logo {
+            width: 90%;
+            max-width: 350px;
+            height: auto;
+            max-height: 220px;
+            object-fit: contain;
+            margin-bottom: 10px;
+            filter: drop-shadow(0 5px 5px rgba(0,0,0,0.1));
+        }
+
+        /* --- 3D BUTTON STYLES --- */
+        .big-btn-container { width: 100%; display: flex; justify-content: center; }
+
+        .split-btn-container {
+            display: flex;
+            gap: 15px;
+            width: 100%;
+            height: 80px;
+        }
+
+        .btn-3d {
+            border: none;
+            border-radius: 16px;
+            font-size: 1.1rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            color: white;
+            cursor: pointer;
+            transition: all 0.1s ease;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            line-height: 1.2;
+            transform: translateY(0);
+            text-shadow: 1px 1px 0 rgba(0,0,0,0.2);
+        }
+
+        .btn-3d:active {
+            transform: translateY(6px);
+            box-shadow: none !important;
+        }
+
+        /* Specific Button Colors & Images */
+        .daily-btn {
+            flex: 1;
+            background: var(--btn-blue-top);
+            background-image: url("Daily.jpg");
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            box-shadow: 0 6px 0 var(--btn-blue-shadow);
+        }
+
+        .weekly-btn {
+            flex: 1;
+            background: var(--btn-purple-top);
+            background-image: url("Weekly.jpg");
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            box-shadow: 0 6px 0 var(--btn-purple-shadow);
+        }
+
+        .play-btn {
+            width: 100%;
+            height: 160px;
+            font-size: 1.4rem;
+            background: #0fcc22;
+            background-image: url("Start.jpg");
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            box-shadow: 0 8px 0 var(--btn-green-shadow);
+        }
+        .play-btn:active { transform: translateY(8px); }
+
+        .soon-btn {
+            width: 100%;
+            height: 160px;
+            background: #b0b0b0;
+            background-image: url("Soon.jpg");
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            box-shadow: 0 6px 0 var(--btn-gray-shadow);
+            color: #e5e7eb;
+            cursor: not-allowed;
+        }
+
+        /* --- GAME TILES --- */
+        #game-board-container {
+            flex-grow: 1;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            overflow-y: auto;
+            padding-top: 20px;
+            padding-bottom: 220px;
+        }
+
+        #game-board {
+            display: grid;
+            grid-gap: 8px;
+            padding: 10px;
+            align-content: start;
+        }
+
+        .tile {
+            width: 52px;
+            height: 52px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 2rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            transition: all 0.2s;
+            background-color: var(--tile-empty-bg);
+            border: 2px solid var(--tile-empty-border);
+            color: #333;
+            box-shadow: inset 0 4px 0 rgba(0,0,0,0.05); 
+        }
+
+        .tile.active {
+            border-color: #888;
+            background-color: #fff;
+            animation: popIn 0.1s ease-in-out;
+            box-shadow: 0 4px 0 rgba(0,0,0,0.1);
+        }
+
+        .tile.correct, .tile.present, .tile.absent {
+            border: none;
+            color: white;
+            text-shadow: 1px 1px 0 rgba(0,0,0,0.2);
+            transform: translateY(0);
+        }
+
+        .tile.correct {
+            background-color: var(--correct-bg);
+            box-shadow: 0 4px 0 var(--correct-shadow);
+        }
+        .tile.present {
+            background-color: var(--present-bg);
+            box-shadow: 0 4px 0 var(--present-shadow);
+        }
+        .tile.absent {
+            background-color: var(--absent-bg); /* Now Red */
+            box-shadow: 0 4px 0 var(--absent-shadow);
+        }
+
+        /* --- KEYBOARD --- */
+        #keyboard {
+            position: fixed; bottom: 0; left: 0; width: 100%; z-index: 100;
+            background: linear-gradient(to top, #eef2f5 90%, transparent);
+            padding: 10px 5px 30px 5px;
+            display: flex; flex-direction: column; align-items: center;
+        }
+        .keyboard-inner { width: 100%; max-width: 500px; }
+        .key-row { display: flex; justify-content: center; gap: 5px; margin-bottom: 8px; width: 100%; }
+        
+        .key {
+            background-color: #d1d5db;
+            box-shadow: 0 3px 0 #9ca3af;
+            color: #333;
+            font-weight: 700;
+            height: 52px;
+            border-radius: 6px;
+            cursor: pointer;
+            flex: 1;
+            display: flex; justify-content: center; align-items: center;
+            font-size: 1.1rem;
+            position: relative;
+        }
+        .key:active { transform: translateY(3px); box-shadow: none; }
+        .key.wide { flex: 1.5; font-size: 0.9rem; }
+        .key-count { position: absolute; top: 1px; right: 2px; font-size: 0.6rem; font-weight: 800; color: #333; }
+
+        /* Colored Keys */
+        .key.correct { background: var(--correct-bg); box-shadow: 0 3px 0 var(--correct-shadow); color: white; }
+        .key.present { background: var(--present-bg); box-shadow: 0 3px 0 var(--present-shadow); color: white; }
+        .key.absent  { background: var(--absent-bg);  box-shadow: 0 3px 0 var(--absent-shadow);  color: white; }
+
+        /* --- GAME HEADER --- */
+        #game-screen { display: none; flex-direction: column; align-items: center; height: 100%; width: 100%; position: relative; }
+        
+        #game-header {
+            width: 100%; max-width: 500px; padding: 10px 15px;
+            display: flex; justify-content: space-between; align-items: center;
+            background: transparent; height: 60px; flex-shrink: 0;
+        }
+        .header-icon-btn {
+            background: #fff; border: 2px solid #ddd; border-radius: 12px;
+            color: #555; cursor: pointer; padding: 5px; width: 40px; height: 40px;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 3px 0 #ddd; transition: all 0.1s;
+        }
+        .header-icon-btn:active { transform: translateY(3px); box-shadow: none; }
+        .header-icon-btn svg { width: 24px; height: 24px; fill: currentColor; }
+        .info-btn-style { font-weight: bold; font-family: serif; font-size: 1.2rem; }
+
+        /* --- MODALS --- */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);
+            display: none; justify-content: center; align-items: center; z-index: 150;
+        }
+        .modal-content {
+            background: #fff; padding: 25px; border-radius: 20px;
+            text-align: center; width: 85%; max-width: 350px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2); border: 4px solid #e5e7eb;
+        }
+        .length-options { display: flex; gap: 15px; justify-content: center; margin: 25px 0; }
+        .len-btn {
+            width: 55px; height: 55px; border-radius: 50%; border: none;
+            background: var(--btn-green-top); box-shadow: 0 4px 0 var(--btn-green-shadow);
+            color: white; font-size: 1.3rem; font-weight: bold; cursor: pointer;
+        }
+        .len-btn:active { transform: translateY(4px); box-shadow: none; }
+        
+        .close-modal-btn {
+            background: none; border: none; color: #888; text-decoration: underline; 
+            font-size: 1rem; cursor: pointer; margin-top: 10px;
+        }
+
+        /* Rules */
+        .rules-list { text-align: left; padding: 0 10px; margin: 20px 0; }
+        .rule-example { display: flex; gap: 10px; margin: 10px 0; align-items: center; font-size: 0.9rem; }
+        .rule-tile { 
+            width: 35px; height: 35px; border-radius: 6px;
+            display: flex; justify-content: center; align-items: center; 
+            font-weight: bold; color: white; font-size: 1.1rem;
+            box-shadow: 0 3px 0 rgba(0,0,0,0.2);
+        }
+
+        #message {
+            position: fixed; top: 12%; left: 50%; transform: translateX(-50%);
+            background: #333; color: #fff; padding: 12px 24px;
+            border-radius: 30px; font-weight: bold; display: none; z-index: 200;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        @keyframes popIn { 0% { transform: scale(0.8); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
+        .shake { animation: shake 0.5s; }
+        @keyframes shake { 0%,100%{transform:translateX(0);} 20%,60%{transform:translateX(-5px);} 40%,80%{transform:translateX(5px);} }
+
+    </style>
+</head>
+<body>
+
+    <div id="home-screen">
+        <img src="Aaa.png" alt="Guess the Word" class="home-logo">
+
+        <div class="big-btn-container">
+            <div class="split-btn-container">
+                <button class="btn-3d daily-btn" onclick="startDailyTask()">
+                   <br><span style="font-size:0.8rem; opacity:0.9"></span>
+                </button>
+                <button class="btn-3d weekly-btn" onclick="startWeeklyTask()">
+                   <br><span style="font-size:0.8rem; opacity:0.9"></span>
+                </button>
+            </div>
+        </div>
+
+        <div class="big-btn-container">
+            <button class="btn-3d play-btn" onclick="openLengthModal()">
+                </button>
+        </div>
+
+        <div class="big-btn-container">
+            <button class="btn-3d soon-btn">
+                </button>
+        </div>
+    </div>
+
+    <div id="length-modal-overlay" class="modal-overlay">
+        <div class="modal-content">
+            <h2 style="margin-top:0;">Select Length</h2>
+            <div class="length-options">
+                <button class="len-btn" onclick="startCustomGame(4)">4</button>
+                <button class="len-btn" onclick="startCustomGame(5)">5</button>
+                <button class="len-btn" onclick="startCustomGame(6)">6</button>
+            </div>
+            <button class="close-modal-btn" onclick="closeModal('length-modal-overlay')">Cancel</button>
+        </div>
+    </div>
+
+    <div id="rules-modal-overlay" class="modal-overlay">
+        <div class="modal-content">
+            <h2 style="margin-top:0;">How To Play</h2>
+            <p style="color:#666;">Guess the word in 6 tries.</p>
+            <div class="rules-list">
+                <div class="rule-example">
+                    <div class="rule-tile" style="background:var(--correct-bg)">W</div>
+                    <span>Correct letter & spot</span>
+                </div>
+                <div class="rule-example">
+                    <div class="rule-tile" style="background:var(--present-bg)">O</div>
+                    <span>Correct letter, wrong spot</span>
+                </div>
+                <div class="rule-example">
+                    <div class="rule-tile" style="background:var(--absent-bg)">R</div>
+                    <span>Not in the word (Red)</span>
+                </div>
+            </div>
+            <button class="close-modal-btn" onclick="closeModal('rules-modal-overlay')">Close</button>
+        </div>
+    </div>
+
+    <div id="result-modal" class="modal-overlay" onclick="restartCurrentGame()">
+        <div class="modal-content">
+            <h2 id="result-title" style="margin-top:0; font-size: 2rem;"></h2>
+            <p id="result-msg" style="font-size: 1.1rem; color:#555;"></p>
+            <p style="font-size: 0.9rem; color:#888; margin-top:15px;">(Click anywhere to continue)</p>
+        </div>
+    </div>
+
+    <div id="game-screen">
+        <div id="game-header">
+            <button class="header-icon-btn" onclick="goHome()">&#8592;</button>
+            <span id="game-title" style="font-weight:800; color:#444;">GUESS THE WORD</span>
+            <div class="header-actions" style="display:flex; gap:10px;">
+                <button class="header-icon-btn" onclick="showHint()">
+                    <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg>
+                </button>
+                <button class="header-icon-btn" onclick="openRulesModal()">
+                    <div class="info-btn-style">i</div>
+                </button>
+            </div>
+        </div>
+
+        <div id="game-board-container">
+            <div id="game-board"></div>
+        </div>
+
+        <div id="keyboard">
+            <div class="keyboard-inner">
+                </div>
+        </div>
+    </div>
+
+    <div id="message"></div>
+
+  
+    
+       <script>
+        // --- DATA ---
+        const DAILY_WORD = "FROST";
+        const WEEKLY_WORD = "PLANET";
+        const CUSTOM_WORDS = {
+            4: ["FISH", "BIRD", "LION", "TREE", "BLUE", "CODE", "JUMP", "MILK", "GOLD"],
+            5: ["APPLE", "TIGER", "BEACH", "WORLD", "PIANO", "GHOST", "BRUSH", "PLANT"],
+            6: ["BANANA", "ROCKET", "GUITAR", "ORANGE", "CASTLE", "JUNGLE", "SUMMER"]
+        };
+
+        let currentWord = "";
+        let wordLength = 5;
+        const maxGuesses = 6;
+        let guesses = [];
+        let currentGuess = "";
+        let gameOver = false;
+        let currentGameMode = 'custom';
+
+        // --- NAVIGATION ---
+        function openLengthModal() { document.getElementById('length-modal-overlay').style.display = 'flex'; }
+        function openRulesModal() { document.getElementById('rules-modal-overlay').style.display = 'flex'; }
+        function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+        
+        function goHome() {
+            document.getElementById('game-screen').style.display = 'none';
+            document.getElementById('home-screen').style.display = 'flex';
+            resetGame();
+        }
+
+        // --- TASKS START ---
+        function startDailyTask() {
+            if(localStorage.getItem('dailyPlayedDate') === getTodayStr()) {
+                showMessage("You already guessed it today!");
+                return;
+            }
+            setupGame('daily', DAILY_WORD, "DAILY TASK");
+        }
+
+        function startWeeklyTask() {
+            if(localStorage.getItem('weeklyPlayedStr') === getWeekStr()) {
+                showMessage("You already guessed it this week!");
+                return;
+            }
+            setupGame('weekly', WEEKLY_WORD, "WEEKLY TASK");
+        }
+
+        function startCustomGame(len) {
+            closeModal('length-modal-overlay');
+            const arr = CUSTOM_WORDS[len];
+            const word = arr[Math.floor(Math.random() * arr.length)];
+            setupGame('custom', word, `CUSTOM (${len})`);
+        }
+
+        function setupGame(mode, word, title) {
+            currentGameMode = mode;
+            currentWord = word;
+            wordLength = word.length;
+            document.getElementById('game-title').innerText = title;
+            document.getElementById('home-screen').style.display = 'none';
+            document.getElementById('game-screen').style.display = 'flex';
+            
+            // Reset logic before starting
+            resetGame();
+            initBoard();
+            initKeyboard();
+        }
+
+        // --- GAME LOGIC ---
+        function initBoard() {
+            const board = document.getElementById('game-board');
+            board.innerHTML = '';
+            board.style.gridTemplateColumns = `repeat(${wordLength}, 1fr)`;
+            for(let i=0; i<maxGuesses*wordLength; i++) {
+                const tile = document.createElement('div');
+                tile.className = 'tile';
+                board.appendChild(tile);
+            }
+        }
+
+        function initKeyboard() {
+            const kb = document.querySelector('.keyboard-inner');
+            kb.innerHTML = '';
+            const rows = ["QWERTYUIOP", "ASDFGHJKL", "ZXCVBNM"];
+            
+            rows.forEach((row, i) => {
+                const rDiv = document.createElement('div');
+                rDiv.className = 'key-row';
+                if(i===2) rDiv.appendChild(createKey("ENTER", true));
+                for(let char of row) rDiv.appendChild(createKey(char, false));
+                if(i===2) rDiv.appendChild(createKey("⌫", true));
+                kb.appendChild(rDiv);
+            });
+        }
+
+        function createKey(char, isWide) {
+            const k = document.createElement('div');
+            k.className = `key ${isWide?'wide':''}`;
+            k.innerHTML = `${char}<span class="key-count"></span>`;
+            k.id = `key-${char}`;
+            k.onclick = () => handleInput(char);
+            return k;
+        }
+
+        function handleInput(key) {
+            if(gameOver) return; // Stop input if game ended
+            
+            if(key === "ENTER") submitGuess();
+            else if(key === "⌫" || key === "BACKSPACE") {
+                currentGuess = currentGuess.slice(0, -1);
+                updateGrid();
+            } else if(currentGuess.length < wordLength && /^[A-Z]$/.test(key)) {
+                currentGuess += key;
+                updateGrid();
+            }
+        }
+
+        function updateGrid() {
+            const start = guesses.length * wordLength;
+            const tiles = document.querySelectorAll('.tile');
+            for(let i=0; i<wordLength; i++) {
+                tiles[start+i].innerText = currentGuess[i] || "";
+                if(currentGuess[i]) tiles[start+i].classList.add('active');
+                else tiles[start+i].classList.remove('active');
+            }
+        }
+
+        // --- MAIN SUBMIT LOGIC (Fixed Win/Loss) ---
+        function submitGuess() {
+            if(currentGuess.length !== wordLength) {
+                showMessage("Not enough letters");
+                shakeRow();
+                return;
+            }
+            
+            const start = guesses.length * wordLength;
+            const tiles = document.querySelectorAll('.tile');
+            const target = currentWord.split('');
+            const guess = currentGuess.split('');
+
+            // 1. Check Greens (Correct)
+            guess.forEach((c, i) => {
+                if(c === target[i]) {
+                    tiles[start+i].classList.add('correct');
+                    updateKey(c, 'correct');
+                    target[i] = null;
+                    guess[i] = null;
+                }
+            });
+
+            // 2. Check Yellows (Present) & Reds (Absent)
+            guess.forEach((c, i) => {
+                if(!c) return; // Skip handled greens
+                const idx = target.indexOf(c);
+                if(idx > -1) {
+                    tiles[start+i].classList.add('present');
+                    updateKey(c, 'present');
+                    target[idx] = null;
+                } else {
+                    tiles[start+i].classList.add('absent'); // Turns Red via CSS
+                    updateKey(c, 'absent');
+                }
+            });
+
+            guesses.push(currentGuess);
+            updateCounts();
+
+            // 3. Win Logic
+            if(currentGuess === currentWord) {
+                gameOver = true;
+                saveProgress();
+                // Delay showing popup slightly so user sees the green tiles
+                setTimeout(() => showResultPopup(true), 600); 
+            } 
+            // 4. Loss Logic
+            else if(guesses.length === maxGuesses) {
+                gameOver = true;
+                saveProgress();
+                // Delay showing popup
+                setTimeout(() => showResultPopup(false), 600);
+            }
+            
+            currentGuess = "";
+        }
+
+        // --- POPUP & RESTART LOGIC ---
+        function showResultPopup(won) {
+            const modal = document.getElementById('result-modal');
+            const title = document.getElementById('result-title');
+            const msg = document.getElementById('result-msg');
+
+            if(won) {
+                title.innerText = "Splendid! 🏆";
+                title.style.color = "var(--correct-bg)";
+                msg.innerText = "You found the word! Click anywhere to play again.";
+            } else {
+                title.innerText = "Game Over 😞";
+                title.style.color = "var(--absent-bg)";
+                msg.innerHTML = `The word was: <br><span style="font-size:1.5rem; color:#333;">${currentWord}</span><br><br>Click anywhere to retry.`;
+            }
+            modal.style.display = 'flex';
+        }
+
+        function restartCurrentGame() {
+            // Hide popup
+            document.getElementById('result-modal').style.display = 'none';
+
+            if(currentGameMode === 'custom') {
+                // If custom, immediately start a new game with same length
+                const arr = CUSTOM_WORDS[wordLength];
+                // Ensure a new random word is picked
+                const newWord = arr[Math.floor(Math.random() * arr.length)];
+                
+                resetGame(); // Clear variables
+                currentWord = newWord;
+                
+                // Re-draw board
+                initBoard();
+                initKeyboard();
+            } else {
+                // If Daily/Weekly, go home (since they can't replay immediately if won)
+                goHome();
+            }
+        }
+
+        function updateKey(char, status) {
+            const key = document.getElementById(`key-${char}`);
+            if(!key || key.classList.contains('correct')) return;
+            key.classList.remove('present','absent');
+            key.classList.add(status);
+        }
+
+        function updateCounts() {
+            const counts = {};
+            for(let c of currentWord) counts[c] = (counts[c]||0)+1;
+            for(let c in counts) {
+                if(counts[c] > 1) {
+                    const key = document.getElementById(`key-${c}`);
+                    if(key && (key.classList.contains('correct') || key.classList.contains('present'))) {
+                        key.querySelector('.key-count').innerText = counts[c];
+                    }
+                }
+            }
+        }
+
+        function showHint() {
+            if(gameOver) return;
+            const secret = currentWord.split('');
+            let hint = secret.find((c, i) => {
+                return !guesses.some(g => g[i] === c);
+            });
+            
+            if(hint) showMessage(`Hint: The word contains '${hint}'`);
+            else showMessage("You have found all letters!");
+        }
+
+        // --- UTILS ---
+        function showMessage(msg, dur=2000) {
+            const m = document.getElementById('message');
+            m.innerHTML = msg; 
+            m.style.display = 'block';
+            setTimeout(()=>m.style.display='none', dur);
+        }
+
+        function shakeRow() {
+            const start = guesses.length * wordLength;
+            const tiles = document.querySelectorAll('.tile');
+            for(let i=0; i<wordLength; i++) tiles[start+i].classList.add('shake');
+            setTimeout(()=> { 
+                for(let i=0; i<wordLength; i++) tiles[start+i].classList.remove('shake'); 
+            }, 500);
+        }
+
+        function getTodayStr() { return new Date().toISOString().split('T')[0]; }
+        function getWeekStr() {
+            const d = new Date(); d.setUTCDate(d.getUTCDate() + 4 - (d.getDay()||7));
+            const yearStart = new Date(Date.UTC(d.getFullYear(),0,1));
+            const w = Math.ceil((((d - yearStart) / 86400000) + 1)/7);
+            return `${d.getFullYear()}-W${w}`;
+        }
+
+        function saveProgress() {
+            if(currentGameMode==='daily') localStorage.setItem('dailyPlayedDate', getTodayStr());
+            if(currentGameMode==='weekly') localStorage.setItem('weeklyPlayedStr', getWeekStr());
+        }
+
+        function resetGame() { 
+            guesses = []; 
+            currentGuess = ""; 
+            gameOver = false; 
+            // Clear Key Counts
+            document.querySelectorAll('.key-count').forEach(el => el.innerText = "");
+        }
+        
+        document.addEventListener('keydown', e => {
+            const k = e.key.toUpperCase();
+            if(k==="ENTER"||k==="BACKSPACE"||/^[A-Z]$/.test(k)) handleInput(k);
+        });
+    </script>
+
+</body>
+</html>
